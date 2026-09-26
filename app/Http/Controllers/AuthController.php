@@ -10,6 +10,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Auth\AuthenticationException;
 
 class AuthController extends Controller
 {
@@ -35,9 +36,7 @@ class AuthController extends Controller
     {
         $user = User::where('email', $request->email)->first();
         if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Unauthorized.'
-            ], 401);
+            throw new AuthenticationException('Invalid email or password.');
         }
 
         $token = $user->createToken('api')->plainTextToken;
