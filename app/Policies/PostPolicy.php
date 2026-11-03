@@ -64,4 +64,14 @@ class PostPolicy
     {
         return false;
     }
+
+    public function publish(User $user, Post $post): bool
+    {
+        return $user->id === $post->author_id;
+    }
+
+    public function unpublish(User $user, Post $post): bool
+    {
+        return $user->id === $post->author_id;
+    }
 }

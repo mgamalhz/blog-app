@@ -25,6 +25,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::apiResource('posts', PostController::class)->except(['index', 'show']);
+    Route::post('posts/{post}/publish', [PostController::class, 'publish']);
+    Route::post('posts/{post}/unpublish', [PostController::class, 'unpublish']);
     Route::post('posts/{post}/comments', [CommentController::class, 'store']);
     Route::delete('comments/{comment}', [CommentController::class, 'destroy']);
     Route::post('tags', [TagController::class, 'store']);

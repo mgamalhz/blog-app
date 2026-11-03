@@ -85,8 +85,8 @@ class PostTest extends TestCase
 
     public function test_it_returns_only_posts_matching_the_search_term(): void
     {
-        Post::factory()->create(['title' => 'Learning Laravel API']);
-        Post::factory()->create(['title' => 'Cooking Healthy Food']);
+        Post::factory()->create(['title' => 'Learning Laravel API', 'published_at' => now()]);
+        Post::factory()->create(['title' => 'Cooking Healthy Food', 'published_at' => now()]);
 
         $response = $this->getJson('/api/posts?search=Laravel');
 
@@ -97,8 +97,8 @@ class PostTest extends TestCase
 
     public function test_it_sorts_posts_by_title_in_ascending_order(): void
     {
-        Post::factory()->create(['title' => 'Mohamed Post']);
-        Post::factory()->create(['title' => 'Ahmed Post']);
+        Post::factory()->create(['title' => 'Mohamed Post', 'published_at' => now()]);
+        Post::factory()->create(['title' => 'Ahmed Post', 'published_at' => now()]);
 
         $response = $this->getJson('/api/posts?sort=title&direction=asc');
 
@@ -113,5 +113,63 @@ class PostTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['sort']);
+    }
+
+
+
+
+
+    public function test_new_posts_are_created_as_drafts_by_default(): void
+    {
+        $user = User::factory()->create();
+        $category = Category::factory()->create();
+
+        Sanctum::actingAs($user);
+        $response = $this->postJson('/api/posts', [
+            'title' => 'My New Draft Post',
+            'body' => 'Content here',
+            'category_id' => $category->id,
+            'published_at' => now()->toDateTimeString()
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertNull(Post::find($response->json('data.id'))->published_at);
+    }
+
+    public function test_guests_cannot_view_draft_posts(): void
+    {
+        $author = User::factory()->create();
+        $draftPost = Post::factory()->create(['author_id' => $author->id]);
+
+        $this->getJson("/api/posts/{$draftPost->id}")->assertStatus(404);
+
+        $response = $this->getJson('/api/posts');
+        $response->assertStatus(200)->assertJsonMissing(['id' => $draftPost->id]);
+    }
+
+    public function test_owner_can_publish_and_unpublish_their_post_correctly(): void
+    {
+        $author = User::factory()->create();
+        $post = Post::factory()->create(['author_id' => $author->id]);
+
+        Sanctum::actingAs($author);
+
+        $this->postJson("/api/posts/{$post->id}/publish")->assertStatus(200);
+        $this->assertNotNull($post->fresh()->published_at);
+
+        $this->postJson("/api/posts/{$post->id}/unpublish")->assertStatus(200);
+        $this->assertNull($post->fresh()->published_at);
+    }
+
+    public function test_non_owner_is_forbidden_from_changing_post_lifecycle(): void
+    {
+        $author = User::factory()->create();
+        $intruder = User::factory()->create();
+        $post = Post::factory()->create(['author_id' => $author->id]);
+
+        Sanctum::actingAs($intruder);
+
+        $this->postJson("/api/posts/{$post->id}/publish")->assertStatus(403);
+        $this->postJson("/api/posts/{$post->id}/unpublish")->assertStatus(403);
     }
 }

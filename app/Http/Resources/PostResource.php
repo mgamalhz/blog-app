@@ -22,7 +22,8 @@ class PostResource extends JsonResource
             'category'    => new CategoryResource($this->whenLoaded('category')),
             'author_name' => $this->whenLoaded('author', function () {
                 return $this->author->name;
-            })
+            }),
+            'published_at' => $this->published_at
         ];
     }
 }
