@@ -54,7 +54,7 @@ class PostPolicy
      */
     public function restore(User $user, Post $post): bool
     {
-        return false;
+        return $user->id === $post->author_id;
     }
 
     /**
@@ -63,5 +63,15 @@ class PostPolicy
     public function forceDelete(User $user, Post $post): bool
     {
         return false;
+    }
+
+    public function publish(User $user, Post $post): bool
+    {
+        return $user->id === $post->author_id;
+    }
+
+    public function unpublish(User $user, Post $post): bool
+    {
+        return $user->id === $post->author_id;
     }
 }
