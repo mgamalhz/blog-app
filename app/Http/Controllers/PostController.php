@@ -9,6 +9,7 @@ use App\Models\Post;
 
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
+use App\Http\Requests\IndexPostRequest;
 
 use App\Http\Resources\PostResource;
 use App\Services\PostService;
@@ -22,16 +23,31 @@ class PostController extends Controller
         $this->postService = $postService;
     }
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(IndexPostRequest $request): AnonymousResourceCollection
     {
+
+        $validated = $request->validated();
+        $sortColumn = $validated['sort'] ?? 'created_at';
+        $sortDirection = $validated['direction'] ?? 'desc';
+
         $posts = Post::query()
-            ->when($request->category_id, function ($query, $categoryId) {
+            ->with(['category', 'author'])
+            ->withCount('comments')
+            ->when($validated['category_id'] ?? null, function ($query, $categoryId) {
                 return $query->where('category_id', $categoryId);
             })
-            ->when($request->author_id, function ($query, $authorId) {
+            ->when($validated['author_id'] ?? null, function ($query, $authorId) {
                 return $query->where('author_id', $authorId);
             })
-            ->paginate(15);
+            ->when($validated['search'] ?? null, function ($query, $searchTerm) {
+                $query->where(function ($subQuery) use ($searchTerm) {
+                    $subQuery->where('title', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('body', 'like', '%' . $searchTerm . '%');
+                });
+            })
+            ->orderBy($sortColumn, $sortDirection)
+            ->paginate(15)
+            ->withQueryString();
 
         return PostResource::collection($posts);
     }

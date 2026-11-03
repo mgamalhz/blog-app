@@ -82,4 +82,36 @@ class PostTest extends TestCase
         $this->deleteJson("/api/posts/{$post->id}")
             ->assertStatus(204);
     }
+
+    public function test_it_returns_only_posts_matching_the_search_term(): void
+    {
+        Post::factory()->create(['title' => 'Learning Laravel API']);
+        Post::factory()->create(['title' => 'Cooking Healthy Food']);
+
+        $response = $this->getJson('/api/posts?search=Laravel');
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['title' => 'Learning Laravel API']);
+        $response->assertJsonMissing(['title' => 'Cooking Healthy Food']);
+    }
+
+    public function test_it_sorts_posts_by_title_in_ascending_order(): void
+    {
+        Post::factory()->create(['title' => 'Mohamed Post']);
+        Post::factory()->create(['title' => 'Ahmed Post']);
+
+        $response = $this->getJson('/api/posts?sort=title&direction=asc');
+
+        $response->assertStatus(200);
+        $this->assertEquals('Ahmed Post', $response->json('data.0.title'));
+        $this->assertEquals('Mohamed Post', $response->json('data.1.title'));
+    }
+
+    public function test_it_returns_422_validation_error_for_invalid_sort_column(): void
+    {
+        $response = $this->getJson('/api/posts?sort=password');
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['sort']);
+    }
 }
