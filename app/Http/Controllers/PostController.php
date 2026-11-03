@@ -117,4 +117,22 @@ class PostController extends Controller
         $post->delete();
         return response()->json(null, 204);
     }
+
+    public function trashed(): AnonymousResourceCollection
+    {
+        $posts = Post::onlyTrashed()
+            ->where('author_id', Auth::id())
+            ->with(['category', 'author'])
+            ->paginate(15);
+
+        return PostResource::collection($posts);
+    }
+
+    public function restore(Post $post)
+    {
+        $this->authorize('restore', $post);
+        $post->restore();
+
+        return response()->json(['message' => 'Post restored successfully.', 200]);
+    }
 }
