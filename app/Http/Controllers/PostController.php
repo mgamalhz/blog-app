@@ -34,6 +34,7 @@ class PostController extends Controller
         $sortColumn = $validated['sort'] ?? 'created_at';
         $sortDirection = $validated['direction'] ?? 'desc';
 
+        $currentUser = $request->user('sanctum');
         $posts = Post::query()
             ->with(['category', 'author'])
             ->withCount('comments')
@@ -49,9 +50,11 @@ class PostController extends Controller
                         ->orWhere('body', 'like', '%' . $searchTerm . '%');
                 });
             })
-            ->where(function ($query) {
-                $query->published()
-                    ->orWhere('author_id', Auth::id());
+            ->where(function ($query) use ($currentUser) {
+                $query->published();
+                if ($currentUser) {
+                    $query->orWhere('author_id', $currentUser->id);
+                }
             })
             ->orderBy($sortColumn, $sortDirection)
             ->paginate(15)
@@ -60,9 +63,10 @@ class PostController extends Controller
         return PostResource::collection($posts);
     }
 
-    public function show(Post $post): PostResource
+    public function show(Request $request, Post $post): PostResource
     {
-        if (is_null($post->published_at) && $post->author_id !== Auth::id()) {
+        $currentUser = $request->user('sanctum');
+        if (is_null($post->published_at) && ($currentUser?->id !== $post->author_id)) {
             abort(404);
         }
         $post->load(['category', 'author']);

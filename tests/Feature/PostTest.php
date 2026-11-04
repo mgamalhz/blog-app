@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Facades\Auth;
 use App\Models\Post;
 use App\Models\User;
 use App\Models\Category;
@@ -155,6 +156,46 @@ class PostTest extends TestCase
 
         $this->postJson("/api/posts/{$post->id}/unpublish")->assertStatus(200);
         $this->assertNull($post->fresh()->published_at);
+    }
+
+    public function test_publish_endpoint_makes_a_post_visible_to_the_public(): void
+    {
+        $author = User::factory()->create();
+        $category = Category::factory()->create();
+        $post = Post::factory()->create([
+            'author_id' => $author->id,
+            'category_id' => $category->id,
+            'published_at' => null
+        ]);
+
+        $this->getJson("/api/posts/{$post->id}")->assertStatus(404);
+
+        Sanctum::actingAs($author);
+        $this->postJson("/api/posts/{$post->id}/publish")->assertStatus(200);
+
+        $this->actingAsGuest();
+        $response = $this->getJson("/api/posts/{$post->id}");
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.title', $post->title);
+    }
+
+    public function test_unpublish_endpoint_hides_a_post_from_the_public_again(): void
+    {
+        $author = User::factory()->create();
+        $category = Category::factory()->create();
+        $post = Post::factory()->create([
+            'author_id' => $author->id,
+            'category_id' => $category->id,
+            'published_at' => now()
+        ]);
+
+        $this->getJson("/api/posts/{$post->id}")->assertStatus(200);
+
+        Sanctum::actingAs($author);
+        $this->postJson("/api/posts/{$post->id}/unpublish")->assertStatus(200);
+
+        $this->actingAsGuest();
+        $this->getJson("/api/posts/{$post->id}")->assertStatus(404);
     }
 
     public function test_non_owner_is_forbidden_from_changing_post_lifecycle(): void
