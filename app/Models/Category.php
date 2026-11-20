@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Category extends Model
 {
     use HasFactory;
+
     protected $fillable = ['name'];
+
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);

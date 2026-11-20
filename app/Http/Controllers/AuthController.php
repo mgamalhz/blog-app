@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
-use App\Models\User;
-use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\JsonResponse;
+use App\Http\Requests\RegisterRequest;
+use App\Models\User;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -23,12 +20,12 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Successfully Registered',
-            'user'    => [
-                'id'    => $user->id,
-                'name'  => $user->name,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
                 'email' => $user->email,
             ],
-            'token'   => $token
+            'token' => $token,
         ], 201);
     }
 
@@ -40,14 +37,15 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('api')->plainTextToken;
+
         return response()->json([
             'message' => 'Login Successful.',
-            'user'    => [
-                'id'    => $user->id,
-                'name'  => $user->name,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
                 'email' => $user->email,
             ],
-            'token'   => $token
+            'token' => $token,
         ], 200);
     }
 }

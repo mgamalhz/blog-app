@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use App\Models\Post;
 use App\Models\User;
-use App\Models\Category;
-use Laravel\Sanctum\Sanctum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class PostTest extends TestCase
@@ -23,7 +23,7 @@ class PostTest extends TestCase
             ->assertJsonStructure([
                 'data',
                 'links',
-                'meta'
+                'meta',
             ]);
     }
 
@@ -36,7 +36,7 @@ class PostTest extends TestCase
         $this->postJson('/api/posts', [
             'title' => 'Valid Title',
             'body' => 'Valid Body',
-            'category_id' => $category->id
+            'category_id' => $category->id,
         ])->assertStatus(201);
 
         $this->postJson('/api/posts', ['title' => '', 'body' => ''])
@@ -51,7 +51,7 @@ class PostTest extends TestCase
         $response = $this->postJson('/api/posts', [
             'title' => 'Title by Guest',
             'body' => 'Body by Guest',
-            'category_id' => $category->id
+            'category_id' => $category->id,
         ]);
 
         $this->assertTrue(in_array($response->getStatusCode(), [401, 403]));
@@ -64,7 +64,7 @@ class PostTest extends TestCase
         $category = Category::factory()->create();
         $post = Post::factory()->create(['author_id' => $owner->id]);
 
-        Sanctum::actingAs(new User(), []);
+        Sanctum::actingAs(new User, []);
         $this->putJson("/api/posts/{$post->id}", ['title' => 'Updated'])->assertStatus(403);
         $this->deleteJson("/api/posts/{$post->id}")->assertStatus(403);
 
@@ -76,7 +76,7 @@ class PostTest extends TestCase
         $this->putJson("/api/posts/{$post->id}", [
             'title' => 'New Title',
             'body' => 'New Body',
-            'category_id' => $category->id
+            'category_id' => $category->id,
         ])->assertStatus(200);
 
         $this->deleteJson("/api/posts/{$post->id}")
@@ -125,7 +125,7 @@ class PostTest extends TestCase
             'title' => 'My New Draft Post',
             'body' => 'Content here',
             'category_id' => $category->id,
-            'published_at' => now()->toDateTimeString()
+            'published_at' => now()->toDateTimeString(),
         ]);
 
         $response->assertStatus(201);
@@ -176,7 +176,7 @@ class PostTest extends TestCase
         $post = Post::factory()->create([
             'author_id' => $author->id,
             'category_id' => $category->id,
-            'published_at' => now()
+            'published_at' => now(),
         ]);
 
         Sanctum::actingAs($author);
@@ -196,7 +196,7 @@ class PostTest extends TestCase
         $post = Post::factory()->create([
             'author_id' => $author->id,
             'category_id' => $category->id,
-            'deleted_at' => now()
+            'deleted_at' => now(),
         ]);
 
         Sanctum::actingAs($author);
@@ -215,7 +215,7 @@ class PostTest extends TestCase
         $post = Post::factory()->create([
             'author_id' => $author->id,
             'category_id' => $category->id,
-            'deleted_at' => now()
+            'deleted_at' => now(),
         ]);
 
         Sanctum::actingAs($intruder);

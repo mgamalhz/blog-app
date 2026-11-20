@@ -2,26 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use App\Models\Post;
-
-
+use App\Http\Requests\IndexPostRequest;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
-use App\Http\Requests\IndexPostRequest;
-
 use App\Http\Resources\PostResource;
+use App\Models\Post;
 use App\Services\PostService;
-
-use Illuminate\Support\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
     protected PostService $postService;
+
     public function __construct(PostService $postService)
     {
         $this->postService = $postService;
@@ -45,8 +40,8 @@ class PostController extends Controller
             })
             ->when($validated['search'] ?? null, function ($query, $searchTerm) {
                 $query->where(function ($subQuery) use ($searchTerm) {
-                    $subQuery->where('title', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('body', 'like', '%' . $searchTerm . '%');
+                    $subQuery->where('title', 'like', '%'.$searchTerm.'%')
+                        ->orWhere('body', 'like', '%'.$searchTerm.'%');
                 });
             })
             ->where(function ($query) {
@@ -66,6 +61,7 @@ class PostController extends Controller
             abort(404);
         }
         $post->load(['category', 'author']);
+
         return new PostResource($post);
     }
 
@@ -76,6 +72,7 @@ class PostController extends Controller
             $validated['tags'] = $request->input('tags');
         }
         $post = $this->postService->create($validated, $request->user());
+
         return new PostResource($post);
     }
 
@@ -88,6 +85,7 @@ class PostController extends Controller
         }
 
         $updatedPost = $this->postService->update($post, $validated);
+
         return new PostResource($post);
     }
 
@@ -115,6 +113,7 @@ class PostController extends Controller
     {
         $this->authorize('delete', $post);
         $post->delete();
+
         return response()->json(null, 204);
     }
 

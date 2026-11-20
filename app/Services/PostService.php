@@ -14,7 +14,7 @@ class PostService
             $data['author_id'] = $author->id;
             $post = Post::create($data);
 
-            if (!empty($data['tags'])) {
+            if (! empty($data['tags'])) {
                 $post->tags()->sync($data['tags']);
             }
 
