@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Models\User;
-use Laravel\Sanctum\Sanctum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class CommentTest extends TestCase
@@ -37,6 +37,7 @@ class CommentTest extends TestCase
         $this->postJson("/api/posts/{$post->id}/comments", ['body' => 'Nice post!'])
             ->assertStatus(201);
     }
+
     public function test_comment_author_comes_strictly_from_token_never_the_body(): void
     {
         $post = Post::factory()->create();
@@ -47,7 +48,7 @@ class CommentTest extends TestCase
 
         $response = $this->postJson("/api/posts/{$post->id}/comments", [
             'body' => 'Security test',
-            'author_id' => $someOtherUser->id
+            'author_id' => $someOtherUser->id,
         ]);
 
         $response->assertStatus(201);

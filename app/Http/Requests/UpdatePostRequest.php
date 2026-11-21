@@ -23,9 +23,9 @@ class UpdatePostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title'       => 'sometimes|string|min:3|max:255',
-            'body'        => 'sometimes|string',
-            'category_id' => 'sometimes|exists:categories,id'
+            'title' => 'sometimes|string|min:3|max:255',
+            'body' => 'sometimes|string',
+            'category_id' => 'sometimes|exists:categories,id',
         ];
     }
 }
